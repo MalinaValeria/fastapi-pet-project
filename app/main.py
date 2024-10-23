@@ -4,7 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.exceptions import TokenExpiredException, TokenNotFoundException
-from app.users.router import router as users_router
+from app.users.routers import router as users_routers
+from app.chat.routers import router as chat_routers
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -17,21 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(users_router)
-
-
-@app.get("/")
-async def redirect_to_auth():
-    return RedirectResponse(url="/auth")
-
-
-@app.exception_handler(TokenExpiredException)
-async def token_expired_exception_handler(request: Request, exc: HTTPException):
-    # Возвращаем редирект на страницу /auth
-    return RedirectResponse(url="/auth")
+app.include_router(users_routers)
+app.include_router(chat_routers)
 
 
 @app.exception_handler(TokenNotFoundException)
-async def token_no_found_exception_handler(request: Request, exc: HTTPException):
-    # Возвращаем редирект на страницу /auth
-    return RedirectResponse(url="/auth")
+@app.exception_handler(TokenExpiredException)
+async def handle_token_exceptions(request: Request, exc: HTTPException):
+    return RedirectResponse(url="/auth/login", status_code=302)
