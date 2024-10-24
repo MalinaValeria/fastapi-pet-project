@@ -24,7 +24,12 @@ def set_cookies(response: Response, key: str, value: str, token_age: int):
                         samesite='lax')
 
 
-@router.post('/register/')
+@router.get('/registration/', response_class=HTMLResponse, summary='Registration')
+async def get_registration_page(request: Request):
+    return templates.TemplateResponse('registration.html', context={'request': request})
+
+
+@router.post('/registration/')
 async def register(user_data: SUserRegister) -> dict:
     user = await UsersDAO.find_one_or_none(email=user_data.email)
     if user:
@@ -42,12 +47,12 @@ async def register(user_data: SUserRegister) -> dict:
     return {'message': 'User created successfully'}
 
 
-@router.get('/login', response_class=HTMLResponse, summary='Login')
+@router.get('/login/', response_class=HTMLResponse, summary='Login')
 async def get_login_page(request: Request):
     return templates.TemplateResponse('login.html', context={'request': request})
 
 
-@router.post('/authorization/')
+@router.post('/login/')
 async def login(response: Response, form: OAuth2PasswordRequestForm = Depends()) -> dict:
     user = await authenticate_user(email=form.username, password=form.password)
     if not user:

@@ -3,9 +3,9 @@ const login = async (url, data) => {
         return await axios.post(url, data);
     } catch (error) {
         console.error(error);
-        const alert = document.getElementById('alert');
-        alert.hidden = false;
-        alert.innerText = error.response.data.detail;
+        const alert = $('#alert');
+        alert.removeAttribute('hidden');
+        alert.text(error.response.data.detail);
         return null;
     }
 }
@@ -20,11 +20,20 @@ const submitForm = async (url, data) => {
     }
 }
 
-const loginForm = document.getElementById('loginForm');
-loginForm.addEventListener('submit', async (event) => {
+const AUTH_URL = 'http://localhost:8000/auth/login/';
+
+const loginForm = $('#loginForm');
+loginForm.on('submit', async (event) => {
     event.preventDefault();
+    const loginBtn = $('#loginForm button[type="submit"]');
+    loginBtn.disabled = true;
+    $('#spinner').hidden = false;
     const formData = new FormData();
-    formData.append('username', document.querySelector('#loginForm input[type="email"]').value);
-    formData.append('password', document.querySelector('#loginForm input[type="password"]').value);
-    await submitForm('http://localhost:8000/auth/authorization/', formData);
+    formData.append('username', $('#loginForm input[type="email"]').val());
+    formData.append('password', $('#loginForm input[type="password"]').val());
+    try {
+        await submitForm(AUTH_URL, formData);
+    } catch (error) {
+        console.error(`Form submission error: ${error}`);
+    }
 })
