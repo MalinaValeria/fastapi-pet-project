@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Response, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
@@ -9,7 +11,9 @@ from app.exceptions import UserAlreadyExistsException, PasswordMismatchException
     NoJwtException, NoUserIdException
 from app.users.auth import get_password_hash, authenticate_user, create_access_token, create_refresh_token
 from app.users.dao import UsersDAO
-from app.users.schemas import SUserRegister
+from app.users.dependensies import get_current_user
+from app.users.models import User
+from app.users.schemas import SUserRegister, SUserRead
 from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory='app/templates')
@@ -63,8 +67,6 @@ async def login(response: Response, form: OAuth2PasswordRequestForm = Depends())
 
     set_cookies(response, key='access_token', value=access_token, token_age=ACCESS_TOKEN_EXPIRES)
     set_cookies(response, key='refresh_token', value=refresh_token, token_age=REFRESH_TOKEN_EXPIRES)
-    set_cookies(response, key='logged_in', value='True', token_age=ACCESS_TOKEN_EXPIRES)
-
     return {'access_token': access_token, 'refresh_token': refresh_token}
 
 
@@ -89,3 +91,11 @@ def refresh_jwt(response: Response, refresh_token: str) -> dict:
 def logout(response: Response):
     response.delete_cookie(key='access_token')
     return {'status': 'success'}
+
+
+@router.get('/users/', response_model=List[SUserRead])
+async def get_users(user_data: User = Depends(get_current_user)):
+    users_all = await UsersDAO.find_all()
+    users = [user for user in users_all if user.id != user_data.id]
+    return [{"id": user.id, "name": user.name} for user in users]
+

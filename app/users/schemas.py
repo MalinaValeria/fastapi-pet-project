@@ -8,6 +8,6 @@ class SUserRegister(BaseModel):
     name: str = Field(..., min_length=2, max_length=50, description='Name')
 
 
-class SUserAuth(BaseModel):
-    email: EmailStr = Field(..., description='Email address')
-    password: str = Field(..., min_length=8, max_length=50, description='Password')
+class SUserRead(BaseModel):
+    id: int = Field(..., description='User ID')
+    name: str = Field(..., description='User name')
