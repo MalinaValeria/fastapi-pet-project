@@ -3,7 +3,6 @@ const handleRegistrationError = (error) => {
     const alert = $('#alert');
     alert.removeAttr('hidden');
     const errorDetails = error.response.data.detail;
-    console.log(Array.isArray(errorDetails))
     if (Array.isArray(errorDetails)) {
         alert.text(errorDetails[0].msg);
         errorDetails.forEach((detail) => {
@@ -34,7 +33,7 @@ registerForm.on('submit', async (event) => {
     spinner.removeAttr('hidden');
 
     const formData = {
-        name: $('#registrationForm input[name="name"]').val(),
+        username: $('#registrationForm input[name="username"]').val(),
         email: $('#registrationForm input[name="email"]').val(),
         password: $('#registrationForm input[name="password"]').val(),
         password_confirm: $('#registrationForm input[name="password_confirm"]').val(),

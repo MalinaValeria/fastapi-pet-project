@@ -4,7 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.exceptions import TokenExpiredException, TokenNotFoundException
-from app.users.routers import router as users_routers
+from app.users.routers import auth_routers, friendship_routers
+
 from app.chat.routers import router as chat_routers
 
 app = FastAPI()
@@ -18,7 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(users_routers)
+app.include_router(auth_routers)
+app.include_router(friendship_routers)
 app.include_router(chat_routers)
 
 

@@ -11,12 +11,12 @@ class MessagesDAO(BaseDAO):
     model = Message
 
     @classmethod
-    async def get_messages(cls, sender_id: int, recipient_id: int) -> List[Message]:
+    async def get_messages(cls, sender: int, recipient: int) -> List[Message]:
         async with async_session_maker() as session:
             query = select(cls.model).filter(
                 or_(
-                    and_(cls.model.sender_id == sender_id, cls.model.recipient_id == recipient_id),
-                    and_(cls.model.sender_id == recipient_id, cls.model.recipient_id == sender_id)
+                    and_(cls.model.sender == sender, cls.model.recipient == recipient),
+                    and_(cls.model.sender == recipient, cls.model.recipient == sender)
                 )
             ).order_by(cls.model.created_at)
             result = await session.execute(query)

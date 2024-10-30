@@ -45,8 +45,7 @@ manager = ConnectionManager()
 
 @router.get('/', response_class=HTMLResponse, summary='Chat')
 async def get_chat_page(request: Request, user_data: User = Depends(get_current_user)):
-    return templates.TemplateResponse('chat.html',
-                                      context={'request': request, 'user': user_data})
+    return templates.TemplateResponse('chat.html', context={'request': request, 'user': user_data})
 
 
 @router.websocket('/ws/{user_id}')
@@ -68,18 +67,18 @@ async def get_messages(interlocutor_id: int, user: User = Depends(get_current_us
 @router.post('/messages/', response_model=MessageCreate)
 async def send_message(message: MessageCreate, user: User = Depends(get_current_user)):
     await MessagesDAO.add(
-        sender_id=user.id,
-        recipient_id=message.recipient_id,
+        sender=user.id,
+        recipient=message.recipient,
         content=message.content
     )
     message_data = {
-        'sender_id': user.id,
-        'recipient_id': message.recipient_id,
+        'sender': user.id,
+        'recipient': message.recipient,
         'content': message.content,
         'created_at': datetime.now().isoformat()
     }
 
-    await manager.send_message(message_data, message.recipient_id)
+    await manager.send_message(message_data, message.recipient)
     await manager.send_message(message_data, user.id)
 
-    return {'recipient_id': message.recipient_id, 'content': message.content, 'msg': 'Message sent'}
+    return {'recipient': message.recipient, 'content': message.content, 'msg': 'Message sent'}

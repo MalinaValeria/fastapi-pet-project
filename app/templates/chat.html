@@ -12,6 +12,13 @@
 <nav class="navbar navbar-light">
     <div class="container">
         <h1 class="h3">Messages</h1>
+        <form class="d-flex m-3" method="GET" action=''>
+            <input class="form-control fs-5" type="search" placeholder="Search by username"
+                   aria-label="Search"
+                   onchange="this.form.submit()"
+                   name="search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
         <button class="btn btn-danger" onclick="logout()">Logout</button>
     </div>
 

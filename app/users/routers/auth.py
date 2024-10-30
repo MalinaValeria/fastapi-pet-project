@@ -1,19 +1,15 @@
-from typing import List
 
 from fastapi import APIRouter, Response, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse
-
 from app.config import settings, get_auth_data
 from app.exceptions import UserAlreadyExistsException, PasswordMismatchException, IncorrectEmailOrPasswordException, \
-    NoJwtException, NoUserIdException
+    NoJwtException, NoUserIdException, UsernameAlreadyExistsException
 from app.users.auth import get_password_hash, authenticate_user, create_access_token, create_refresh_token
 from app.users.dao import UsersDAO
-from app.users.dependensies import get_current_user
-from app.users.models import User
-from app.users.schemas import SUserRegister, SUserRead
+from app.users.schemas import SUserRegister
 from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory='app/templates')
@@ -28,22 +24,26 @@ def set_cookies(response: Response, key: str, value: str, token_age: int):
                         samesite='lax')
 
 
-@router.get('/registration/', response_class=HTMLResponse, summary='Registration')
+@router.get('/registration', response_class=HTMLResponse, summary='Registration')
 async def get_registration_page(request: Request):
     return templates.TemplateResponse('registration.html', context={'request': request})
 
 
-@router.post('/registration/')
+@router.post('/registration')
 async def register(user_data: SUserRegister) -> dict:
     user = await UsersDAO.find_one_or_none(email=user_data.email)
     if user:
         raise UserAlreadyExistsException
 
+    username = await UsersDAO.find_one_or_none(username=user_data.username)
+    if username:
+        raise UsernameAlreadyExistsException
+
     if user_data.password != user_data.password_confirm:
         raise PasswordMismatchException
     hashed_password = get_password_hash(user_data.password)
     await UsersDAO.add(
-        name=user_data.name,
+        username=user_data.username,
         email=user_data.email,
         hashed_password=hashed_password
     )
@@ -51,14 +51,14 @@ async def register(user_data: SUserRegister) -> dict:
     return {'message': 'User created successfully'}
 
 
-@router.get('/login/', response_class=HTMLResponse, summary='Login')
+@router.get('/login', response_class=HTMLResponse, summary='Login')
 async def get_login_page(request: Request):
     return templates.TemplateResponse('login.html', context={'request': request})
 
 
-@router.post('/login/')
+@router.post('/login')
 async def login(response: Response, form: OAuth2PasswordRequestForm = Depends()) -> dict:
-    user = await authenticate_user(email=form.username, password=form.password)
+    user = await authenticate_user(identifier=form.username, password=form.password)
     if not user:
         raise IncorrectEmailOrPasswordException
 
@@ -70,7 +70,7 @@ async def login(response: Response, form: OAuth2PasswordRequestForm = Depends())
     return {'access_token': access_token, 'refresh_token': refresh_token}
 
 
-@router.post('/refresh/')
+@router.post('/refresh')
 def refresh_jwt(response: Response, refresh_token: str) -> dict:
     try:
         auth_data = get_auth_data()
@@ -87,15 +87,7 @@ def refresh_jwt(response: Response, refresh_token: str) -> dict:
         raise NoJwtException
 
 
-@router.post('/logout/')
+@router.post('/logout')
 def logout(response: Response):
     response.delete_cookie(key='access_token')
     return {'status': 'success'}
-
-
-@router.get('/users/', response_model=List[SUserRead])
-async def get_users(user_data: User = Depends(get_current_user)):
-    users_all = await UsersDAO.find_all()
-    users = [user for user in users_all if user.id != user_data.id]
-    return [{"id": user.id, "name": user.name} for user in users]
-

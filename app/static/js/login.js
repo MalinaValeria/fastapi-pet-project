@@ -4,7 +4,7 @@ const login = async (url, data) => {
     } catch (error) {
         console.error(error);
         const alert = $('#alert');
-        alert.removeAttribute('hidden');
+        alert.removeAttr('hidden');
         alert.text(error.response.data.detail);
         return null;
     }
@@ -29,7 +29,7 @@ loginForm.on('submit', async (event) => {
     loginBtn.disabled = true;
     $('#spinner').hidden = false;
     const formData = new FormData();
-    formData.append('username', $('#loginForm input[type="email"]').val());
+    formData.append('username', $('#loginForm input[type="text"]').val());
     formData.append('password', $('#loginForm input[type="password"]').val());
     try {
         await submitForm(AUTH_URL, formData);

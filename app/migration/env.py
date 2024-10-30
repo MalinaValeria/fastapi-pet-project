@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.database import database_url, Base
-from app.users.models import User
+from app.users.models import User, Friends
 from app.chat.models import Message
 
 # this is the Alembic Config object, which provides

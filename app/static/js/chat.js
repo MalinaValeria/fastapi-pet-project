@@ -31,7 +31,7 @@ async function loadMessages(userId) {
     try {
         const result = await axios.get(`/messages/${userId}`);
         messagesContainer.html(
-            result.data.map((message) => createMessageElement(message.content, message.recipient_id, message.created_at)).join('')
+            result.data.map((message) => createMessageElement(message.content, message.recipient, message.created_at)).join('')
         )
     } catch (error) {
         console.error(error);
@@ -46,8 +46,8 @@ function connectWebsocket() {
     socket.onopen = () => console.log('Connected');
     socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.recipient_id === selectedUserId) {
-            addMessage(message.content, message.recipient_id, message.created_at);
+        if (message.recipient === selectedUserId) {
+            addMessage(message.content, message.recipient, message.created_at);
         }
 
     };
@@ -58,7 +58,7 @@ async function sendMessage() {
     const message = messageInput.val().trim();
     if (message && selectedUserId) {
         const data = {
-            recipient_id: selectedUserId,
+            recipient: selectedUserId,
             content: message
         };
 
@@ -94,13 +94,13 @@ function startMessagePolling(userId) {
 
     messagePollingInterval = setInterval(async () => {
         await loadMessages(userId);
-    }, 1000);
+    }, 10000);
 
 }
 
-async function fetchUsers() {
+async function getFriends() {
     try {
-        const response = await axios.get('auth/users/');
+        const response = await axios.get(`friends/`);
         const users = response.data;
         const userList = $("#interlocutors");
 
@@ -111,7 +111,7 @@ async function fetchUsers() {
                 <div data-user-id="${user.id}" class="list-group-item list-group-item-action border-0">
                     <div class="d-flex align-items-start">
                         <div class="flex-grow-1 ml-3">
-                            <p class="m-0">${user.name}</p>
+                            <p class="m-0">${user.username}</p>
                         </div>
                     </div>
                 </div>
@@ -128,6 +128,5 @@ $(document).on('click', '.list-group-item', function () {
 
 sendBtn.on('click', sendMessage);
 
-document.addEventListener('DOMContentLoaded', fetchUsers);
-setInterval(fetchUsers, 10000);
+document.addEventListener('DOMContentLoaded', getFriends);
 
