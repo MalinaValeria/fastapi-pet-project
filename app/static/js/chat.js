@@ -4,6 +4,7 @@ let messagePollingInterval = null;
 let messageInput = $('#message-input');
 let sendBtn = $('#send-btn');
 let messagesContainer = $('.chat-messages');
+let search = $('#search')
 
 
 async function logout() {
@@ -122,11 +123,47 @@ async function getFriends() {
     }
 }
 
+async function searchUser(event) {
+    event.preventDefault();
+    const username = search.val().trim();
+    const searchResult = $('#searchResult');
+    const noResults = $('#noResults');
+    $('#collapseSearch').addClass('show');
+    searchResult.empty();
+    noResults.prop('hidden', true);
+    try {
+        const response = await axios.get('friends/search', {params: {username: username}});
+        const users = response.data;
+        users.forEach(user => {
+                searchResult.append(`<li class="d-flex justify-content-between"><p class="fs-4 m-0" id="searchName">${user.username}</p><button class="btn friend-btn" data-friend-id="${user.id}"><span class="material-symbols-outlined">add</span></button></li>`)
+            }
+        )
+    } catch (error) {
+        console.error(`Error fetching users: ${error}`);
+        noResults.prop('hidden', false);
+    }
+}
+
+async function addFriend(friendId) {
+    try {
+        await axios.post(`friends/add/${friendId}`);
+    } catch (error) {
+        console.error(`Error adding friend: ${error}`);
+    }
+}
+
 $(document).on('click', '.list-group-item', function () {
     selectUser($(this).data('user-id'), $(this).find('p').text());
 });
 
-sendBtn.on('click', sendMessage);
+$(document).on('click', '.friend-btn', function () {
+    addFriend($(this).data('friend-id'));
+});
 
+sendBtn.on('click', sendMessage);
+$('#searchForm').on('submit', searchUser);
+search.on('blur', () => {
+    $('#collapseSearch').removeClass('show');
+});
 document.addEventListener('DOMContentLoaded', getFriends);
 

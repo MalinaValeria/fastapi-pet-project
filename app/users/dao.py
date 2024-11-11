@@ -1,7 +1,7 @@
-from sqlalchemy import select, or_, outerjoin
+from sqlalchemy import select, or_, outerjoin, delete
 from typing import List, Optional, Dict
 
-from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.dao.base import BaseDAO
 from app.database import async_session_maker
@@ -28,8 +28,8 @@ class UsersDAO(BaseDAO):
     @classmethod
     async def get_all_friends(cls, user_id: int) -> List[Dict[str, int | str]]:
         async with async_session_maker() as session:
-            friends_table = Friends.__table__.alias('friends')
-            users_table = cls.model.__table__.alias('users')
+            friends_table = Friends.__table__
+            users_table = cls.model.__table__
 
             query = (
                 select(users_table.c.id, users_table.c.username)
@@ -49,3 +49,15 @@ class UsersDAO(BaseDAO):
 
 class FriendsDAO(BaseDAO):
     model = Friends
+
+    @classmethod
+    async def delete(cls, user_id: int, friend_id: int) -> None:
+        async with async_session_maker() as session:
+            query = delete(cls.model).where(cls.model.user == user_id, cls.model.friend == friend_id)
+            await session.execute(query)
+            try:
+                await session.commit()
+            except SQLAlchemyError as e:
+                await session.rollback()
+                raise e
+

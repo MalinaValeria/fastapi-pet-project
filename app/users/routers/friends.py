@@ -16,7 +16,7 @@ async def get_friends(user_data: User = Depends(get_current_user)):
     return friends
 
 
-@router.get('/{username}', response_model=List[SUserRead], summary='Find friend')
+@router.get('/search', response_model=List[SUserRead], summary='Find friend')
 async def find_friend(username: str):
     users = await UsersDAO.find_usernames_by_substring(substring=username)
     if not users:
@@ -24,15 +24,17 @@ async def find_friend(username: str):
     return users
 
 
-@router.post('/add', summary='Add friend')
+@router.post('/add/{friend_id}', summary='Add friend')
 async def add_friend(friend_id: int, response: Response, user_id: User = Depends(get_current_user)):
     if not await UsersDAO.find_by_id(friend_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User(friend id) not found")
-    await FriendsDAO.add(user=user_id, friend=friend_id)
+    await FriendsDAO.add(user=user_id.id, friend=friend_id)
     response.status_code = status.HTTP_201_CREATED
     return {'message': 'Friend added'}
 
 
 @router.delete('/delete/{friend_id}', summary='Delete friend')
-async def delete_friend(friendship_id: int, response: Response):
-    pass
+async def delete_friend(friend_id: int, response: Response, user_id: User = Depends(get_current_user)):
+    await FriendsDAO.delete(user_id=user_id.id, friend_id=friend_id)
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return {'message': 'Friend deleted'}

@@ -50,3 +50,15 @@
 .border-top {
     border-top: 1px solid #dee2e6!important;
 }
+
+.search-result {
+    position: absolute;
+    z-index: 1;
+    top: 70px;
+    width: 20.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}

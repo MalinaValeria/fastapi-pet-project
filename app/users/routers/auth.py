@@ -19,8 +19,8 @@ REFRESH_TOKEN_EXPIRES = settings.REFRESH_TOKEN_EXPIRES
 
 
 def set_cookies(response: Response, key: str, value: str, token_age: int):
-    response.set_cookie(key=key, value=value, max_age=token_age * 60,
-                        expires=token_age * 60, path='/', domain=None, secure=False, httponly=True,
+    response.set_cookie(key=key, value=value, max_age=token_age,
+                        expires=token_age, path='/', domain=None, secure=False, httponly=True,
                         samesite='lax')
 
 
@@ -65,8 +65,8 @@ async def login(response: Response, form: OAuth2PasswordRequestForm = Depends())
     access_token = create_access_token(data={'sub': str(user.id)})
     refresh_token = create_refresh_token(data={'sub': str(user.id)})
 
-    set_cookies(response, key='access_token', value=access_token, token_age=ACCESS_TOKEN_EXPIRES)
-    set_cookies(response, key='refresh_token', value=refresh_token, token_age=REFRESH_TOKEN_EXPIRES)
+    set_cookies(response, key='access_token', value=access_token, token_age=ACCESS_TOKEN_EXPIRES * 3600)
+    set_cookies(response, key='refresh_token', value=refresh_token, token_age=REFRESH_TOKEN_EXPIRES * 108000)
     return {'access_token': access_token, 'refresh_token': refresh_token}
 
 
